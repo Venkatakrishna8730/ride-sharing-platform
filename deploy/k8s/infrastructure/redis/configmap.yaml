@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+  namespace: ride-platform
+data:
+  redis.conf: |
+    maxmemory 256mb
+    maxmemory-policy noeviction
+    appendonly yes
+    protected-mode no

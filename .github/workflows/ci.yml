@@ -7,30 +7,17 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  validate-infrastructure:
+  validate-k8s:
+    name: Validate Kubernetes Manifests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Validate Docker Compose Configuration
-        run: docker compose config --quiet
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
 
-      - name: Start Core Datastores
+      - name: Validate Kustomize Build
         run: |
-          docker compose up -d
-          # Wait for services to report healthy
-          timeout 60 bash -c 'until docker compose ps | grep -q "(healthy)"; do sleep 2; done'
-          docker compose ps
-
-      - name: Verify PostgreSQL Connection
-        run: |
-          docker compose exec -T postgres pg_isready -U postgres -d ride_platform
-
-      - name: Verify Redis Ping
-        run: |
-          docker compose exec -T redis redis-cli ping
-
-      - name: Teardown Infrastructure
-        if: always()
-        run: docker compose down -v
+          kubectl kustomize deploy/k8s/ > /dev/null
+          echo "Kustomize build succeeded for deploy/k8s/"

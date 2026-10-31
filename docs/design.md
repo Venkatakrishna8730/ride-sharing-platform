@@ -257,25 +257,4 @@ flowchart TD
 * Cancellations by rider or driver are permitted from REQUESTED, MATCHING, ACCEPTED, and ARRIVING states.
 ```
 
----
 
-## 9. Stage 0 Milestone: LinkedIn Post 1 Draft
-
-> **🚀 Building a Polyglot Ride-Sharing Backend from Scratch: Stage 0 (Architecture & Foundations)**
-> 
-> Studying system design theoretically only gets you so far. To understand what actually happens when distributed systems experience network partitions, double-assignments, replication lag, and broker failures, I'm building a polyglot microservices ride-sharing platform locally.
-> 
-> **Why polyglot?**
-> - **Java (Spring Boot):** For transactional, strongly typed services with complex business rules (Auth, Trip state machine, Matching engine, Payments).
-> - **Node.js:** For high-concurrency, connection-heavy I/O (API Gateway, WebSocket GPS location streaming, Push notifications, GraphQL BFF).
-> 
-> **Key Architecture Decisions for Stage 0:**
-> - Apache Kafka in KRaft mode (no ZooKeeper overhead).
-> - Redis GEO (`GEOADD` / `GEOSEARCH`) for sub-20ms driver proximity lookups.
-> - Transactional Outbox pattern to solve the dual-write problem between PostgreSQL and Kafka.
-> - Atomic driver locks via Redis to guarantee zero double-assignment under concurrent ride requests.
-> 
-> All services run locally via Docker Compose and will scale on Minikube.
-> Next up: Stage 1 — Core Services, REST API, JWT Gateway, and the first working ride flow!
-> 
-> Follow along with the code and design docs: [GitHub Repo Link]

@@ -1,14 +1,15 @@
 # Flagship Ride-Sharing Platform
 
-A polyglot microservices ride-hailing backend built in 9 shippable stages, designed to demonstrate distributed systems principles on a developer laptop and local Kubernetes cluster.
+A polyglot microservices ride-hailing backend engineered with production-grade patterns, designed to demonstrate distributed systems principles on a Kubernetes cluster.
 
 ---
 
 ## Architecture Overview
 
-- **Polyglot Microservices:** Spring Boot (Java 17/21) for transactional domains and Node.js for high-concurrency connection-oriented domains.
-- **Datastores:** PostgreSQL 16 (Relational/Outbox), Redis 7.2 (Geospatial/TTL/Locks), Apache Kafka 3.8 (KRaft mode).
-- **Communication:** REST (External API Gateway), gRPC (Internal low-latency RPC), WebSockets (Driver location & push notifications), Kafka (Event streaming).
+- **Polyglot Microservices:** Spring Boot (Java 17/21) for transactional business domains and Node.js (TypeScript) for high-concurrency connection-oriented domains.
+- **Datastores:** PostgreSQL 16 (Relational & Outbox tables), Redis 7.2 (Geospatial indexing, TTL presence, and atomic locks), Apache Kafka 3.8 (KRaft mode).
+- **Communication:** REST (External API Gateway), gRPC (Internal low-latency RPC), WebSockets (Driver telemetry & push notifications), Kafka (Event streaming).
+- **Orchestration:** Production-grade Kubernetes manifests structured with Kustomize.
 
 Detailed architecture documentation, capacity estimations, and state machine diagrams are located in [`docs/design.md`](docs/design.md).
 
@@ -31,8 +32,13 @@ ride-platform/
 ├── web/                    # React Web Application (Rider, Driver, Admin)
 ├── proto/                  # Shared Protobuf specifications for gRPC
 ├── deploy/
-│   ├── compose/            # Docker Compose configurations
-│   └── k8s/                # Kubernetes manifests
+│   └── k8s/                # Kubernetes manifests & Kustomize overlays
+│       ├── namespace.yaml
+│       ├── kustomization.yaml
+│       └── infrastructure/
+│           ├── postgres/   # PostgreSQL 16 StatefulSet & Config
+│           ├── redis/      # Redis 7.2 StatefulSet & Config
+│           └── kafka/      # Kafka 3.8 (KRaft) StatefulSet & Config
 ├── loadtest/               # k6 load testing scripts
 ├── chaos/                  # Fault-injection and chaos scripts
 └── docs/
@@ -42,24 +48,25 @@ ride-platform/
 
 ---
 
-## Quickstart (Stage 0 Infrastructure)
+## Quickstart (Infrastructure Deployment)
 
 ### 1. Prerequisites
-- Docker Engine $\ge 24.0$ & Docker Compose v2
+- `kubectl` $\ge v1.28$
+- Kubernetes cluster (e.g. Minikube, Kind, or remote cluster)
 - Java 17 or 21
 - Node.js $\ge 20$
 
-### 2. Start Core Infrastructure
+### 2. Deploy Core Infrastructure via Kustomize
 ```bash
-docker compose up -d
+kubectl apply -k deploy/k8s/
 ```
 
-This starts:
-- **PostgreSQL 16:** `localhost:5433` (mapped from container `5432`, `postgres` / `postgrespassword`)
-- **Redis 7.2:** `localhost:6379`
-- **Apache Kafka 3.8 (KRaft):** `localhost:9092`
+This provisions under the `ride-platform` namespace:
+- **PostgreSQL 16:** StatefulSet + Service (`postgres.ride-platform.svc.cluster.local:5432`)
+- **Redis 7.2:** StatefulSet + Service (`redis.ride-platform.svc.cluster.local:6379`)
+- **Apache Kafka 3.8 (KRaft):** StatefulSet + Headless & ClusterIP Services (`kafka.ride-platform.svc.cluster.local:9092`)
 
-Verify service health:
+### 3. Verify Deployment
 ```bash
-docker compose ps
+kubectl get all -n ride-platform
 ```

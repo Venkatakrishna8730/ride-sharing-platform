@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: ride-platform
+data:
+  POSTGRES_DB: "ride_platform"
+  POSTGRES_USER: "postgres"
+  PGPORT: "5432"
