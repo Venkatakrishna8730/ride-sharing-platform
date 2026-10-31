@@ -6,6 +6,7 @@ resources:
   - infrastructure/postgres
   - infrastructure/redis
   - infrastructure/kafka
+  - services
 
 labels:
   - pairs:
