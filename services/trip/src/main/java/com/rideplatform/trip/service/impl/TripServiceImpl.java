@@ -92,18 +92,8 @@ public class TripServiceImpl implements TripService {
             case ACCEPTED -> trip.accept(request.getDriverId());
             case ARRIVING -> trip.arrive();
             case IN_PROGRESS -> trip.startTrip();
-            case COMPLETED -> {
-                trip.complete();
-                // Set actual fare to fare estimate upon completion if not already set
-                if (trip.getActualFare() == null) {
-                    trip.setActualFare(trip.getFareEstimate());
-                }
-            }
-            case CANCELLED -> {
-                String reason = request.getCancellationReason() != null ? request.getCancellationReason() : "Cancelled by user";
-                String cancelledBy = callerRole != null ? callerRole : "SYSTEM";
-                trip.cancel(reason, cancelledBy);
-            }
+            case COMPLETED -> trip.complete();
+            case CANCELLED -> trip.cancel(request.getCancellationReason(), callerRole);
             default -> throw new IllegalArgumentException("Unsupported target status: " + target);
         }
 

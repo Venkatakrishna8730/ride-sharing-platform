@@ -1,9 +1,6 @@
 package com.rideplatform.trip.domain.entity;
 
 import com.rideplatform.trip.domain.enums.TripStatus;
-import com.rideplatform.trip.domain.state.TripContext;
-import com.rideplatform.trip.domain.state.TripState;
-import com.rideplatform.trip.domain.state.TripStateFactory;
 import com.rideplatform.trip.domain.valueobject.GeoLocation;
 import com.rideplatform.trip.domain.valueobject.Money;
 import jakarta.persistence.*;
@@ -21,7 +18,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Trip implements TripContext {
+public class Trip {
 
     @Id
     @Column(updatable = false, nullable = false)
@@ -96,51 +93,43 @@ public class Trip implements TripContext {
         }
     }
 
-    // State Pattern Domain Methods
+    // Direct State Transition Domain Methods
     public void toMatching() {
-        TripState state = TripStateFactory.getState(this.status);
-        state.toMatching(this);
+        this.status.validateTransition(TripStatus.MATCHING);
+        this.status = TripStatus.MATCHING;
     }
 
     public void accept(UUID driverId) {
-        TripState state = TripStateFactory.getState(this.status);
-        state.accept(this, driverId);
+        if (driverId == null) {
+            throw new IllegalArgumentException("Driver ID is required to accept a trip");
+        }
+        this.status.validateTransition(TripStatus.ACCEPTED);
+        this.driverId = driverId;
+        this.status = TripStatus.ACCEPTED;
     }
 
     public void arrive() {
-        TripState state = TripStateFactory.getState(this.status);
-        state.arrive(this);
+        this.status.validateTransition(TripStatus.ARRIVING);
+        this.status = TripStatus.ARRIVING;
     }
 
     public void startTrip() {
-        TripState state = TripStateFactory.getState(this.status);
-        state.startTrip(this);
+        this.status.validateTransition(TripStatus.IN_PROGRESS);
+        this.status = TripStatus.IN_PROGRESS;
     }
 
     public void complete() {
-        TripState state = TripStateFactory.getState(this.status);
-        state.complete(this);
+        this.status.validateTransition(TripStatus.COMPLETED);
+        if (this.actualFare == null) {
+            this.actualFare = this.fareEstimate;
+        }
+        this.status = TripStatus.COMPLETED;
     }
 
     public void cancel(String reason, String cancelledBy) {
-        TripState state = TripStateFactory.getState(this.status);
-        state.cancel(this, reason, cancelledBy);
-    }
-
-    // TripContext callbacks
-    @Override
-    public void transitionTo(TripState nextState) {
-        this.status = nextState.getStatus();
-    }
-
-    @Override
-    public void assignDriver(UUID driverId) {
-        this.driverId = driverId;
-    }
-
-    @Override
-    public void applyCancellation(String reason, String cancelledBy) {
-        this.cancellationReason = reason;
-        this.cancelledBy = cancelledBy;
+        this.status.validateTransition(TripStatus.CANCELLED);
+        this.cancellationReason = reason != null ? reason : "Cancelled by user";
+        this.cancelledBy = cancelledBy != null ? cancelledBy : "SYSTEM";
+        this.status = TripStatus.CANCELLED;
     }
 }

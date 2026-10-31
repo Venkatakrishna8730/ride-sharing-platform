@@ -1,4 +1,4 @@
-package com.rideplatform.trip.domain.state;
+package com.rideplatform.trip.domain;
 
 import com.rideplatform.trip.domain.entity.Trip;
 import com.rideplatform.trip.domain.enums.TripStatus;
@@ -13,7 +13,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class TripStateMachineTest {
+class TripStateTransitionTest {
 
     private Trip trip;
     private final UUID riderId = UUID.randomUUID();
@@ -56,6 +56,7 @@ class TripStateMachineTest {
         // IN_PROGRESS -> COMPLETED
         trip.complete();
         assertEquals(TripStatus.COMPLETED, trip.getStatus());
+        assertNotNull(trip.getActualFare());
     }
 
     @Test
@@ -68,7 +69,7 @@ class TripStateMachineTest {
                 () -> trip.complete()
         );
 
-        assertTrue(ex.getMessage().contains("Cannot perform action 'COMPLETE' when trip is in state 'REQUESTED'"));
+        assertTrue(ex.getMessage().contains("Cannot transition from 'REQUESTED' to 'COMPLETED'"));
         assertEquals(TripStatus.REQUESTED, trip.getStatus());
     }
 
