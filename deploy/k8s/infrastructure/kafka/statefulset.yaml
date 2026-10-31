@@ -43,13 +43,21 @@ spec:
             limits:
               cpu: 800m
               memory: 768Mi
-          readinessProbe:
+          startupProbe:
             exec:
               command:
                 - /opt/kafka/bin/kafka-broker-api-versions.sh
                 - --bootstrap-server
                 - localhost:9092
             initialDelaySeconds: 15
+            periodSeconds: 5
+            failureThreshold: 20
+          readinessProbe:
+            exec:
+              command:
+                - /opt/kafka/bin/kafka-broker-api-versions.sh
+                - --bootstrap-server
+                - localhost:9092
             periodSeconds: 10
             timeoutSeconds: 5
           livenessProbe:
@@ -58,7 +66,6 @@ spec:
                 - /opt/kafka/bin/kafka-broker-api-versions.sh
                 - --bootstrap-server
                 - localhost:9092
-            initialDelaySeconds: 20
             periodSeconds: 15
             timeoutSeconds: 5
   volumeClaimTemplates:
