@@ -37,6 +37,8 @@ spec:
                 secretKeyRef:
                   name: postgres-secret
                   key: POSTGRES_PASSWORD
+            - name: SPRING_FLYWAY_TABLE
+              value: "flyway_trip_history"
           resources:
             requests:
               cpu: 150m

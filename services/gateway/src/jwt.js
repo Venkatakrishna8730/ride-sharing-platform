@@ -23,8 +23,27 @@ function verifyJwt(token, secret) {
 
   const [headerB64, payloadB64, signatureB64] = parts;
 
+  // Parse header to determine algorithm
+  let header;
+  try {
+    header = JSON.parse(base64UrlDecode(headerB64));
+  } catch (e) {
+    throw new Error('Invalid JWT header');
+  }
+
+  const algMap = {
+    'HS256': 'sha256',
+    'HS384': 'sha384',
+    'HS512': 'sha512'
+  };
+
+  const hashAlg = algMap[header.alg];
+  if (!hashAlg) {
+    throw new Error(`Unsupported JWT algorithm: ${header.alg}`);
+  }
+
   // Verify signature
-  const hmac = crypto.createHmac('sha256', secret);
+  const hmac = crypto.createHmac(hashAlg, secret);
   hmac.update(`${headerB64}.${payloadB64}`);
   const expectedSignature = hmac.digest('base64url');
 
