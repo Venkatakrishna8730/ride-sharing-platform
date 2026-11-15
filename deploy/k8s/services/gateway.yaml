@@ -31,6 +31,8 @@ spec:
               value: "http://user-auth-service.ride-platform.svc.cluster.local:8082"
             - name: TRIP_URL
               value: "http://trip-service.ride-platform.svc.cluster.local:8083"
+            - name: DRIVER_LOCATION_URL
+              value: "http://driver-location-service.ride-platform.svc.cluster.local:8081"
             - name: JWT_SECRET
               value: "dGhpcy1pcy1hLXNlY3VyZS0yNTYtYml0LXNlY3JldC1rZXktZm9yLXJpZGUtc2hhcmluZy1wbGF0Zm9ybQ=="
           resources:

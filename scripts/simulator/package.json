@@ -1,0 +1,12 @@
+{
+  "name": "driver-simulator",
+  "version": "1.0.0",
+  "description": "High-concurrency driver WebSocket simulator for real-time location streaming",
+  "main": "driver-simulator.js",
+  "scripts": {
+    "start": "node driver-simulator.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

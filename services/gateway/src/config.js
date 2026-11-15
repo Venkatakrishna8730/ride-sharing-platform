@@ -3,7 +3,8 @@ module.exports = {
   jwtSecret: process.env.JWT_SECRET || 'dGhpcy1pcy1hLXNlY3VyZS0yNTYtYml0LXNlY3JldC1rZXktZm9yLXJpZGUtc2hhcmluZy1wbGF0Zm9ybQ==',
   services: {
     userAuth: process.env.USER_AUTH_URL || 'http://localhost:8082',
-    trip: process.env.TRIP_URL || 'http://localhost:8083'
+    trip: process.env.TRIP_URL || 'http://localhost:8083',
+    driverLocation: process.env.DRIVER_LOCATION_URL || 'http://localhost:8081'
   },
   rateLimit: {
     maxTokens: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
