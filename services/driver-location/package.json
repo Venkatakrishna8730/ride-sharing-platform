@@ -1,0 +1,14 @@
+{
+  "name": "driver-location-service",
+  "version": "1.0.0",
+  "description": "Real-time driver GPS ingestion, Redis GEO spatial indexing, and presence tracking",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "ioredis": "^5.4.1",
+    "ws": "^8.18.0"
+  }
+}

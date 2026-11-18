@@ -5,3 +5,4 @@ resources:
   - user-auth.yaml
   - trip.yaml
   - gateway.yaml
+  - driver-location.yaml

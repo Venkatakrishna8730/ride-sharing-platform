@@ -169,3 +169,92 @@ Attempting an invalid transition (e.g. `REQUESTED` directly to `COMPLETED`) prod
 - **Endpoint:** `GET /api/v1/trips/rider?page=0&size=10`
 - **Header:** `Authorization: Bearer <accessToken>`
 - **Response (200 OK):** Paginated array of trips ordered by `createdAt DESC`.
+
+---
+
+## 4. Driver Location & Real-Time Telemetry (Stage 2)
+
+### 4.1 Query Nearby Drivers
+- **Endpoint:** `GET /api/v1/drivers/nearby?latitude=12.9716&longitude=77.5946&radiusKm=10&limit=50`
+- **Auth:** Public
+- **Query Parameters:**
+  - `latitude` (required, float): Center latitude $[-90, 90]$
+  - `longitude` (required, float): Center longitude $[-180, 180]$
+  - `radiusKm` (optional, float, default `5`): Search radius in kilometers
+  - `limit` (optional, integer, default `20`): Maximum drivers to return
+- **Response (200 OK):**
+```json
+{
+  "center": {
+    "latitude": 12.9716,
+    "longitude": 77.5946
+  },
+  "radiusKm": 10,
+  "count": 2,
+  "queryExecutionTimeMs": 2.14,
+  "drivers": [
+    {
+      "driverId": "driver-0042",
+      "distanceKm": 1.45,
+      "longitude": 77.5892,
+      "latitude": 12.9681,
+      "bearing": 182.4,
+      "speed": 38.5,
+      "status": "AVAILABLE",
+      "lastSeenAt": 1794750431000
+    }
+  ]
+}
+```
+
+### 4.2 Query Single Driver Location & Presence
+- **Endpoint:** `GET /api/v1/drivers/{driverId}/location`
+- **Auth:** Public
+- **Response (200 OK):**
+```json
+{
+  "driverId": "driver-0042",
+  "longitude": 77.5892,
+  "latitude": 12.9681,
+  "bearing": 182.4,
+  "speed": 38.5,
+  "status": "AVAILABLE",
+  "isOnline": true,
+  "lastSeenAt": 1794750431000
+}
+```
+- **Response (404 Not Found - Driver Disconnected or TTL Expired):**
+```json
+{
+  "status": 404,
+  "error": "Not Found",
+  "message": "Driver driver-0042 is offline or not found"
+}
+```
+
+### 4.3 WebSocket Driver Location Ingestion
+- **Protocol:** `WebSocket`
+- **URL:** `ws://localhost:8080/ws/driver/location?token=<jwtAccessToken>`
+- **Handshake Auth:** Driver JWT required in query parameter `?token=...`
+- **Ingestion Packet (Client -> Server):**
+```json
+{
+  "latitude": 12.9716,
+  "longitude": 77.5946,
+  "bearing": 94.5,
+  "speed": 42.0,
+  "status": "AVAILABLE"
+}
+```
+- **Server Acknowledgment (Server -> Client):**
+```json
+{
+  "ack": true,
+  "timestamp": 1794750431050
+}
+```
+
+### 4.4 Real-Time Moving Fleet Map
+- **URL:** `http://localhost:8080/map`
+- **Description:** Interactive Leaflet / OpenStreetMap web page displaying active driver pins moving in real time across coordinates, polling nearby drivers with live telemetry metrics.
+

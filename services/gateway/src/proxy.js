@@ -45,6 +45,66 @@ function forwardRequest(targetBaseUrl, req, res, extraHeaders = {}) {
   req.pipe(proxyReq, { end: true });
 }
 
+/**
+ * Forwards HTTP Upgrade requests (WebSocket) to upstream backend.
+ */
+function forwardWebSocketUpgrade(targetBaseUrl, req, clientSocket, head) {
+  const targetParsed = url.parse(targetBaseUrl);
+  const targetPort = targetParsed.port || (targetParsed.protocol === 'https:' ? 443 : 80);
+  const targetHost = targetParsed.hostname;
+
+  const headers = {
+    ...req.headers,
+    host: targetParsed.host
+  };
+
+  const options = {
+    hostname: targetHost,
+    port: targetPort,
+    path: req.url,
+    method: req.method,
+    headers: headers
+  };
+
+  const proxyReq = http.request(options);
+
+  proxyReq.on('upgrade', (proxyRes, proxySocket, proxyHead) => {
+    let responseHeaders = `HTTP/1.1 101 Switching Protocols\r\n`;
+    for (const [key, value] of Object.entries(proxyRes.headers)) {
+      if (Array.isArray(value)) {
+        for (const v of value) {
+          responseHeaders += `${key}: ${v}\r\n`;
+        }
+      } else {
+        responseHeaders += `${key}: ${value}\r\n`;
+      }
+    }
+    responseHeaders += '\r\n';
+
+    clientSocket.write(responseHeaders);
+    if (proxyHead && proxyHead.length) clientSocket.write(proxyHead);
+    if (head && head.length) proxySocket.write(head);
+
+    proxySocket.pipe(clientSocket);
+    clientSocket.pipe(proxySocket);
+
+    proxySocket.on('error', () => {
+      clientSocket.destroy();
+    });
+    clientSocket.on('error', () => {
+      proxySocket.destroy();
+    });
+  });
+
+  proxyReq.on('error', (err) => {
+    console.error(`[Gateway WS Proxy Error] Failed to reach ${targetBaseUrl}:`, err.message);
+    clientSocket.destroy();
+  });
+
+  proxyReq.end();
+}
+
 module.exports = {
-  forwardRequest
+  forwardRequest,
+  forwardWebSocketUpgrade
 };

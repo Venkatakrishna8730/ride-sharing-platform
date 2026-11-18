@@ -53,7 +53,7 @@ Rather than focusing on surface-level UI or commercial third-party integrations,
 
 9. **Trip Lifecycle State Machine:**
    - Strict state transitions:
-     $$\text{REQUESTED} \longrightarrow \text{MATCHING} \longrightarrow \text{ACCEPTED} \longrightarrow \text{ARRIVING} \longrightarrow \text{IN\_PROGRESS} \longrightarrow \text{COMPLETED}$$
+     `REQUESTED` $\longrightarrow$ `MATCHING` $\longrightarrow$ `ACCEPTED` $\longrightarrow$ `ARRIVING` $\longrightarrow$ `IN_PROGRESS` $\longrightarrow$ `COMPLETED`
    - Cancellation paths: `CANCELLED_BY_RIDER`, `CANCELLED_BY_DRIVER`, `NO_DRIVERS_AVAILABLE`.
 
 10. **Payment & Receipt Generation:**
@@ -165,54 +165,54 @@ flowchart TD
     end
 
     subgraph Edge["Edge Layer"]
-        Gateway["API Gateway (Node.js :8080)\n[Rate Limiting, JWT Validation]"]
+        Gateway["API Gateway (Node.js :8080)<br/>Rate Limiting, JWT Validation"]
     end
 
     subgraph RealTime["Real-Time Location & Telemetry"]
-        DriverLoc["Driver-Location Service (Node.js :8081)\n[WebSocket GPS Ingestion]"]
-        RedisGeo[("Redis 7\n(GEOADD, GEOSEARCH, TTL Presence)")]
+        DriverLoc["Driver-Location Service (Node.js :8081)<br/>WebSocket GPS Ingestion"]
+        RedisGeo[("Redis 7<br/>GEOADD, GEOSEARCH, TTL Presence")]
     end
 
     subgraph CoreServices["Core Business Microservices"]
-        AuthSvc["User/Auth Service\n(Spring Boot :8082)"]
-        TripSvc["Trip Service\n(Spring Boot :8083)\n[State Machine & Outbox]"]
-        MatchSvc["Matching Service\n(Spring Boot :8084)\n[Atomic Claiming]"]
-        PricingSvc["Pricing Service\n(Spring Boot :8085)\n[Surge & Fare]"]
-        PaymentSvc["Payment Service\n(Spring Boot :8086)\n[Saga Participant]"]
+        AuthSvc["User/Auth Service<br/>(Spring Boot :8082)"]
+        TripSvc["Trip Service (Spring Boot :8083)<br/>State Machine & Outbox"]
+        MatchSvc["Matching Service (Spring Boot :8084)<br/>Atomic Claiming"]
+        PricingSvc["Pricing Service (Spring Boot :8085)<br/>Surge & Fare"]
+        PaymentSvc["Payment Service (Spring Boot :8086)<br/>Saga Participant"]
     end
 
     subgraph DataLayer["Datastores"]
-        PostgresDB[("PostgreSQL 16\n(Users, Trips, Payments, Outbox)")]
-        RedisLock[("Redis 7\n(Distributed Locks)")]
-        KafkaBroker["Apache Kafka (KRaft mode :9092)\n[Topics: ride.events, driver.location]"]
+        PostgresDB[("PostgreSQL 16<br/>Users, Trips, Payments, Outbox")]
+        RedisLock[("Redis 7<br/>Distributed Locks")]
+        KafkaBroker["Apache Kafka (KRaft mode :9092)<br/>Topics: ride.events, driver.location"]
     end
 
     subgraph AsyncDownstream["Async & Read Optimization"]
-        NotifSvc["Notification Service (Node.js)\n[Push over WebSocket]"]
-        GraphqlBFF["GraphQL BFF (Node.js :4000)\n[DataLoader Batching]"]
+        NotifSvc["Notification Service (Node.js)<br/>Push over WebSocket"]
+        GraphqlBFF["GraphQL BFF (Node.js :4000)<br/>DataLoader Batching"]
     end
 
     %% Client Interactions
-    RiderClient -->|HTTP REST| Gateway
-    RiderClient <-->|WebSocket Notifications| NotifSvc
-    DriverClient <-->|WebSocket GPS Stream| DriverLoc
-    DriverClient <-->|WebSocket Ride Offers| NotifSvc
+    RiderClient -->|"HTTP REST"| Gateway
+    RiderClient <-->|"WebSocket Notifications"| NotifSvc
+    DriverClient <-->|"WebSocket GPS Stream"| DriverLoc
+    DriverClient <-->|"WebSocket Ride Offers"| NotifSvc
 
     %% Gateway Routing
-    Gateway -->|Forward /auth| AuthSvc
-    Gateway -->|Forward /trips| TripSvc
+    Gateway -->|"Forward /auth"| AuthSvc
+    Gateway -->|"Forward /trips"| TripSvc
 
     %% Internal Communication
     DriverLoc <--> RedisGeo
     AuthSvc <--> PostgresDB
     TripSvc <--> PostgresDB
-    TripSvc -->|Outbox Relay| KafkaBroker
+    TripSvc -->|"Outbox Relay"| KafkaBroker
 
-    TripSvc -->|gRPC /match| MatchSvc
-    MatchSvc -->|gRPC /nearby| DriverLoc
-    MatchSvc -->|gRPC /fare| PricingSvc
-    MatchSvc <-->|SET NX PX (Atomic Claim)| RedisLock
-    MatchSvc -->|Publish Offer| KafkaBroker
+    TripSvc -->|"gRPC /match"| MatchSvc
+    MatchSvc -->|"gRPC /nearby"| DriverLoc
+    MatchSvc -->|"gRPC /fare"| PricingSvc
+    MatchSvc <-->|"SET NX PX (Atomic Claim)"| RedisLock
+    MatchSvc -->|"Publish Offer"| KafkaBroker
 
     KafkaBroker --> NotifSvc
     KafkaBroker --> PaymentSvc

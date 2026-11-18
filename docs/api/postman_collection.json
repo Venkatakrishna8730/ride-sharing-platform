@@ -1,8 +1,8 @@
 {
   "info": {
     "_postman_id": "9b1e84a2-e642-4b2a-8924-f77e68dbb551",
-    "name": "Ride Sharing Platform - Stage 1 APIs",
-    "description": "Complete collection of APIs for Stage 1: User/Auth Service, Trip Service, and Edge API Gateway.",
+    "name": "Ride Sharing Platform - Stage 1 & 2 APIs",
+    "description": "Complete collection of APIs for Stage 1 & Stage 2: User/Auth Service, Trip Service, Driver Location Telemetry & Ingestion, and API Gateway.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -19,6 +19,11 @@
     {
       "key": "tripId",
       "value": "",
+      "type": "string"
+    },
+    {
+      "key": "driverId",
+      "value": "driver-0042",
       "type": "string"
     }
   ],
@@ -431,6 +436,65 @@
                   "value": "10"
                 }
               ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Driver Location & Telemetry",
+      "item": [
+        {
+          "name": "Get Nearby Drivers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/drivers/nearby?latitude=12.9716&longitude=77.5946&radiusKm=10&limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "drivers", "nearby"],
+              "query": [
+                {
+                  "key": "latitude",
+                  "value": "12.9716"
+                },
+                {
+                  "key": "longitude",
+                  "value": "77.5946"
+                },
+                {
+                  "key": "radiusKm",
+                  "value": "10"
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Single Driver Location",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/drivers/{{driverId}}/location",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "drivers", "{{driverId}}", "location"]
+            }
+          }
+        },
+        {
+          "name": "Driver Location Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
             }
           }
         }

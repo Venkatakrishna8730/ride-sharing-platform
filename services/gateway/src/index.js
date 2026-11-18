@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const config = require('./config');
 const { verifyJwt } = require('./jwt');
 const TokenBucketRateLimiter = require('./rateLimiter');
-const { forwardRequest } = require('./proxy');
+const { forwardRequest, forwardWebSocketUpgrade } = require('./proxy');
 
 const rateLimiter = new TokenBucketRateLimiter(
   config.rateLimit.maxTokens,
@@ -14,7 +14,9 @@ const rateLimiter = new TokenBucketRateLimiter(
 const PUBLIC_PREFIXES = [
   '/health',
   '/api/v1/auth/register',
-  '/api/v1/auth/login'
+  '/api/v1/auth/login',
+  '/api/v1/drivers',
+  '/map'
 ];
 
 function isPublicRoute(pathname) {
@@ -109,6 +111,8 @@ const server = http.createServer((req, res) => {
     forwardRequest(config.services.userAuth, req, res, extraHeaders);
   } else if (pathname.startsWith('/api/v1/trips')) {
     forwardRequest(config.services.trip, req, res, extraHeaders);
+  } else if (pathname.startsWith('/api/v1/drivers') || pathname === '/map') {
+    forwardRequest(config.services.driverLocation, req, res, extraHeaders);
   } else {
     res.writeHead(404, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
@@ -121,10 +125,22 @@ const server = http.createServer((req, res) => {
   }
 });
 
+// Handle WebSocket HTTP Upgrades
+server.on('upgrade', (req, socket, head) => {
+  const pathname = req.url.split('?')[0];
+  if (pathname.startsWith('/ws/driver')) {
+    forwardWebSocketUpgrade(config.services.driverLocation, req, socket, head);
+  } else {
+    socket.write('HTTP/1.1 404 Not Found\r\n\r\n');
+    socket.destroy();
+  }
+});
+
 server.listen(config.port, () => {
   console.log(`[API Gateway] Listening on port ${config.port}`);
   console.log(`[API Gateway] Routing /api/v1/auth & /api/v1/users -> ${config.services.userAuth}`);
   console.log(`[API Gateway] Routing /api/v1/trips -> ${config.services.trip}`);
+  console.log(`[API Gateway] Routing /api/v1/drivers & /ws/driver -> ${config.services.driverLocation}`);
 });
 
 process.on('SIGTERM', () => {
